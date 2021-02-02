@@ -8,18 +8,19 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
-public class RMSE extends AbstractLoss {
+public class Poisson extends AbstractLoss {
 
 	public static void main(String arg[]) {
 		ImagePlus ref = IJ.createImage("ref", 32, 200, 202, 32);
 		ImagePlus test = IJ.createImage("test", 32, 200, 202, 32);
 		ref.setRoi(new Roi(20, 30, 50, 50));
 		ref.getProcessor().fill();
+		
 	}
 	
 	@Override
 	public String getName() {
-		return "RMSE";
+		return "Poisson";
 	}
 	@Override
 	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
@@ -39,7 +40,7 @@ public class RMSE extends AbstractLoss {
 			ImageProcessor ipt = test.getStack().getProcessor(it);
 			ImageProcessor ipr = reference.getStack().getProcessor(ir);
 			int n=0;
-			double s, g, mse=0.0, rmse;
+			double s, g, poisson=0.0, rmse;
 			for (int x = 0; x < nxr; x++) {
 				for (int y = 0; y < nyr; y++) {
 					
@@ -47,20 +48,20 @@ public class RMSE extends AbstractLoss {
 					g = ipt.getPixelValue(x, y);
 					if (!Double.isNaN(g))
 						if (!Double.isNaN(s)) {
-							mse += (g-s)*(g-s);
+							poisson += g-s*Math.log(g);
 							n++;
 						}
 				}
 			}
-			mse=mse/n;
-			rmse=Math.sqrt(mse);
-			res.add(rmse);
+			poisson=poisson/n;
+			res.add(poisson);
 					
 		}
 		
 		
 		return res ;
 	}
+
 
 	@Override
 	public ArrayList<Double> compose(ArrayList<Double> loss1, double w_1, ArrayList<Double> loss2, double w_2) {
@@ -77,3 +78,5 @@ public class RMSE extends AbstractLoss {
 		return "Valid";
 	}
 }
+
+

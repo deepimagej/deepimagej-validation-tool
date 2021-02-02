@@ -8,9 +8,9 @@ public abstract class AbstractLoss {
 	
 	private boolean selected;
 	
-	public ArrayList<Double> run(ImagePlus reference, ImagePlus test) {
+	public ArrayList<Double> run(ImagePlus reference, ImagePlus test, Setting setting) {
 		
-		ArrayList<Double> loss = compute(reference, test);
+		ArrayList<Double> loss = compute(reference, test,setting);
 		
 		return loss;
 	}
@@ -22,7 +22,11 @@ public abstract class AbstractLoss {
 	public boolean getSelected() {
 		return selected;
 	}
+	
+	
 	public abstract String getName();
-	public abstract ArrayList<Double> compute(ImagePlus reference, ImagePlus test);
-	public abstract String check(ImagePlus reference, ImagePlus test);
+	public abstract Boolean getSegmented();
+	public abstract ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting);
+	public abstract String check(ImagePlus reference, ImagePlus test,Setting setting);
+	public abstract ArrayList<Double> compose(ArrayList<Double> loss1, double w_1,ArrayList<Double> loss2, double w_2);
 }

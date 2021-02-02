@@ -8,7 +8,7 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
-public class RMSE extends AbstractLoss {
+public class MSLE extends AbstractLoss {
 
 	public static void main(String arg[]) {
 		ImagePlus ref = IJ.createImage("ref", 32, 200, 202, 32);
@@ -19,7 +19,7 @@ public class RMSE extends AbstractLoss {
 	
 	@Override
 	public String getName() {
-		return "RMSE";
+		return "MSLE";
 	}
 	@Override
 	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
@@ -47,14 +47,14 @@ public class RMSE extends AbstractLoss {
 					g = ipt.getPixelValue(x, y);
 					if (!Double.isNaN(g))
 						if (!Double.isNaN(s)) {
-							mse += (g-s)*(g-s);
+							mse += (Math.log(g+1)-Math.log(s+1))*(Math.log(g+1)-Math.log(s+1));
 							n++;
 						}
 				}
 			}
 			mse=mse/n;
-			rmse=Math.sqrt(mse);
-			res.add(rmse);
+			//rmse=Math.sqrt(mse);
+			res.add(mse);
 					
 		}
 		
@@ -64,16 +64,19 @@ public class RMSE extends AbstractLoss {
 
 	@Override
 	public ArrayList<Double> compose(ArrayList<Double> loss1, double w_1, ArrayList<Double> loss2, double w_2) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	@Override
 	public Boolean getSegmented() {
+		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public String check(ImagePlus reference, ImagePlus test, Setting setting) {
+		// TODO Auto-generated method stub
 		return "Valid";
 	}
 }

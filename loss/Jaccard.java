@@ -10,18 +10,13 @@ import ij.process.ImageProcessor;
 
 public class Jaccard extends AbstractLoss {
 
-	/*
-	 * This is a series unit test for the Bce function
-	 */
+
 	public static void main(String arg[]) {
 		ImagePlus ref = IJ.createImage("ref", 32, 200, 202, 32);
 		ImagePlus test = IJ.createImage("test", 32, 200, 202, 32);
 		ref.setRoi(new Roi(20, 30, 50, 50));
 		ref.getProcessor().fill();
 		
-		ArrayList<Double> result = new Bce().run(ref, test);
-		System.out.println("Series of unit test");
-		System.out.println("" + result);
 	}
 	
 	@Override
@@ -29,7 +24,7 @@ public class Jaccard extends AbstractLoss {
 		return "Jaccard";
 	}
 	@Override
-	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test) {
+	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
 		
 		int nxr = reference.getWidth();
 		int nyr = reference.getHeight();
@@ -86,15 +81,48 @@ public class Jaccard extends AbstractLoss {
 		return res ;
 	}
 
+
 	@Override
-	public String check(ImagePlus reference, ImagePlus test) {
+	public ArrayList<Double> compose(ArrayList<Double> loss1, double w_1, ArrayList<Double> loss2, double w_2) {
+		return null;
+	}
+
+	@Override
+	public Boolean getSegmented() {
+		return true;
+	}
+
+	@Override
+	public String check(ImagePlus reference, ImagePlus test, Setting setting) {
+		// TODO Auto-generated method stub
 		
-		if (reference == null)
-			return "null image";
-		if (test == null)
-			return "null image";
+		//get the max of the first stack of the images
+		double min_im1 = MinMax.getminimum(reference.getStack().getProcessor(1));
+		double min_im2 = MinMax.getminimum(test.getStack().getProcessor(1));
 		
-		return "";
+		//get the first stack of the images
+		ImageProcessor ipt = reference.getStack().getProcessor(1);
+		ImageProcessor ipr = test.getStack().getProcessor(1);
+		
+		int nxr = reference.getWidth();
+		int nyr = test.getHeight();
+		
+		if((min_im1<0)||(min_im2<0)) {
+			
+			return "For Jaccard, values must be positive";
+		}
+		double s,g;
+		for (int x = 0; x < nxr; x++) {
+			for (int y = 0; y < nyr; y++) {
+				
+				s =  ipr.getPixelValue(x, y);
+				g = ipt.getPixelValue(x, y);
+				if ((s%1)!=0.0||(g%1)!=0.0) {
+					return "For Jaccard, values must be integer";
+				}
+			}
+		}
+		return "Valid";
 	}
 }
 

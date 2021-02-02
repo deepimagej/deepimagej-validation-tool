@@ -8,18 +8,19 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
-public class RMSE extends AbstractLoss {
+public class MAPE extends AbstractLoss {
 
 	public static void main(String arg[]) {
 		ImagePlus ref = IJ.createImage("ref", 32, 200, 202, 32);
 		ImagePlus test = IJ.createImage("test", 32, 200, 202, 32);
 		ref.setRoi(new Roi(20, 30, 50, 50));
 		ref.getProcessor().fill();
+		
 	}
 	
 	@Override
 	public String getName() {
-		return "RMSE";
+		return "MAPE";
 	}
 	@Override
 	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
@@ -39,7 +40,7 @@ public class RMSE extends AbstractLoss {
 			ImageProcessor ipt = test.getStack().getProcessor(it);
 			ImageProcessor ipr = reference.getStack().getProcessor(ir);
 			int n=0;
-			double s, g, mse=0.0, rmse;
+			double s, g, mape=0.0;
 			for (int x = 0; x < nxr; x++) {
 				for (int y = 0; y < nyr; y++) {
 					
@@ -47,14 +48,27 @@ public class RMSE extends AbstractLoss {
 					g = ipt.getPixelValue(x, y);
 					if (!Double.isNaN(g))
 						if (!Double.isNaN(s)) {
-							mse += (g-s)*(g-s);
+							if (g == s) {
+								mape+=0.0;
+							}
+							else if( s==0.0 &&  g!=s) {
+								mape += 1.0;
+							}
+							else {
+								//if(Math.abs((g-s)/s) > 1.0) {
+								//	mape += 1.0;
+								//}
+								//else {
+									mape += Math.abs((g-s)/s);
+								//}
+							}
+							
 							n++;
 						}
 				}
 			}
-			mse=mse/n;
-			rmse=Math.sqrt(mse);
-			res.add(rmse);
+			mape=100*mape/n;
+			res.add(mape);
 					
 		}
 		
@@ -77,3 +91,4 @@ public class RMSE extends AbstractLoss {
 		return "Valid";
 	}
 }
+

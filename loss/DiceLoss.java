@@ -11,18 +11,12 @@ import ij.process.ImageProcessor;
 
 public class DiceLoss extends AbstractLoss {
 
-	/*
-	 * This is a series unit test for the Bce function
-	 */
 	public static void main(String arg[]) {
 		ImagePlus ref = IJ.createImage("ref", 32, 200, 202, 32);
 		ImagePlus test = IJ.createImage("test", 32, 200, 202, 32);
 		ref.setRoi(new Roi(20, 30, 50, 50));
 		ref.getProcessor().fill();
 		
-		ArrayList<Double> result = new Bce().run(ref, test);
-		System.out.println("Series of unit test");
-		System.out.println("" + result);
 	}
 	
 	@Override
@@ -30,10 +24,12 @@ public class DiceLoss extends AbstractLoss {
 		return "DiceLoss";
 	}
 	@Override
-	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test) {
+	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
 		
 		int nxr = reference.getWidth();
 		int nyr = reference.getHeight();
+		
+		double smooth=1.0; //coeff can be changed in parameters
 			
 		ArrayList<Double> res = new ArrayList<Double>(); 	
 		
@@ -47,7 +43,7 @@ public class DiceLoss extends AbstractLoss {
 			ImageProcessor ipt = test.getStack().getProcessor(it);
 			ImageProcessor ipr = reference.getStack().getProcessor(ir);
 			int n=0;
-			double s, g, sumr = 0.0, sumt = 0.0, dice = 0.0, intersection=0.0, smooth=1.0;
+			double s, g, sumr = 0.0, sumt = 0.0, dice = 0.0, intersection=0.0;
 			for (int x = 0; x < nxr; x++) {
 				for (int y = 0; y < nyr; y++) {
 					
@@ -73,14 +69,31 @@ public class DiceLoss extends AbstractLoss {
 	}
 
 	@Override
-	public String check(ImagePlus reference, ImagePlus test) {
+	public ArrayList<Double> compose(ArrayList<Double> loss1, double w_1, ArrayList<Double> loss2, double w_2) {
+		return null;
+	}
+	
+	@Override
+	public Boolean getSegmented() {
+		return false;
+	}
+
+	@Override
+	public String check(ImagePlus reference, ImagePlus test, Setting setting) {
 		
-		if (reference == null)
-			return "null image";
-		if (test == null)
-			return "null image";
+		//get the max of the first stack of the images
+		double max_im1 = MinMax.getmaximum(reference.getStack().getProcessor(1));
+		double max_im2 = MinMax.getmaximum(test.getStack().getProcessor(1));
 		
-		return "";
+		//double la = test.getStack().getProcessor(1).getPixelValue(0, 0);
+		//get the min of the first stack of the images
+		double min_im1 = MinMax.getminimum(reference.getStack().getProcessor(1));    //.getMin();
+		double min_im2 = MinMax.getminimum(test.getStack().getProcessor(1));// .getMin();
+	
+		if((max_im1 > 1.0 )||(max_im2 > 1.0)||(min_im1<0.0)||(min_im2<0.0)) {
+			return "For DiceLoss, values must be between 0.0 and 1.0" ;
+		}
+		return "Valid";
 	}
 }
 

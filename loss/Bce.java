@@ -18,7 +18,7 @@ public class Bce extends AbstractLoss {
 		ref.setRoi(new Roi(20, 30, 50, 50));
 		ref.getProcessor().fill();
 		
-		ArrayList<Double> result = new Bce().run(ref, test);
+		ArrayList<Double> result = new Bce().run(ref, test,null);
 		System.out.println("Series of unit test");
 		System.out.println("" + result);
 	}
@@ -28,7 +28,7 @@ public class Bce extends AbstractLoss {
 		return "Bce";
 	}
 	@Override
-	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test) {
+	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
 		
 		int nxr = reference.getWidth();
 		int nyr = reference.getHeight();
@@ -53,11 +53,11 @@ public class Bce extends AbstractLoss {
 					g = ipt.getPixelValue(x, y);
 					if (!Double.isNaN(g))
 						if (!Double.isNaN(s)) {
-							bce+=(g/255.0)-((g/255.0)*(s/255.0))+Math.log(1+Math.exp(-Math.abs(g/255.0)));
+							bce+=s*Math.log(g)+(1-s)*Math.log(1-g);
 						}
 				}
 			}
-			res.add(bce/(nxr*nyr));
+			res.add(-bce/(nxr*nyr));
 					
 		}
 		
@@ -66,14 +66,33 @@ public class Bce extends AbstractLoss {
 	}
 
 	@Override
-	public String check(ImagePlus reference, ImagePlus test) {
-		
-		if (reference == null)
-			return "null image";
-		if (test == null)
-			return "null image";
-		
-		return "";
+	public ArrayList<Double> compose(ArrayList<Double> loss1, double w_1, ArrayList<Double> loss2, double w_2) {
+		return null;
 	}
+
+	@Override
+	public Boolean getSegmented() {
+		return false;
+	}
+
+	@Override
+	public String check(ImagePlus reference, ImagePlus test, Setting setting) {
+		
+
+		//get the max of the first stack of the images
+		double max_im1 = MinMax.getmaximum(reference.getStack().getProcessor(1));
+		double max_im2 = MinMax.getmaximum(test.getStack().getProcessor(1));
+		
+		//double la = test.getStack().getProcessor(1).getPixelValue(0, 0);
+		//get the min of the first stack of the images
+		double min_im1 = MinMax.getminimum(reference.getStack().getProcessor(1));    //.getMin();
+		double min_im2 = MinMax.getminimum(test.getStack().getProcessor(1));// .getMin();
+	
+		if((max_im1 > 1.0 )||(max_im2 > 1.0)||(min_im1<0.0)||(min_im2<0.0)) {
+			return "For Bce, values must be between 0.0 and 1.0" ;
+		}
+		return "Valid";
+	}
+
 }
 

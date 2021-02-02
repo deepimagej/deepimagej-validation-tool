@@ -8,7 +8,7 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
-public class RMSE extends AbstractLoss {
+public class Hinge extends AbstractLoss {
 
 	public static void main(String arg[]) {
 		ImagePlus ref = IJ.createImage("ref", 32, 200, 202, 32);
@@ -19,7 +19,7 @@ public class RMSE extends AbstractLoss {
 	
 	@Override
 	public String getName() {
-		return "RMSE";
+		return "Hinge";
 	}
 	@Override
 	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
@@ -39,7 +39,7 @@ public class RMSE extends AbstractLoss {
 			ImageProcessor ipt = test.getStack().getProcessor(it);
 			ImageProcessor ipr = reference.getStack().getProcessor(ir);
 			int n=0;
-			double s, g, mse=0.0, rmse;
+			double s, g, hinge=0.0, rmse;
 			for (int x = 0; x < nxr; x++) {
 				for (int y = 0; y < nyr; y++) {
 					
@@ -47,14 +47,13 @@ public class RMSE extends AbstractLoss {
 					g = ipt.getPixelValue(x, y);
 					if (!Double.isNaN(g))
 						if (!Double.isNaN(s)) {
-							mse += (g-s)*(g-s);
+							hinge += Math.max(1.0 -g*s, 0.0);
 							n++;
 						}
 				}
 			}
-			mse=mse/n;
-			rmse=Math.sqrt(mse);
-			res.add(rmse);
+			hinge=hinge/n;
+			res.add(hinge);
 					
 		}
 		
@@ -74,6 +73,20 @@ public class RMSE extends AbstractLoss {
 
 	@Override
 	public String check(ImagePlus reference, ImagePlus test, Setting setting) {
+		
+		//get the max of the first stack of the images
+		double max_im1 = MinMax.getmaximum(reference.getStack().getProcessor(1));
+		double max_im2 = MinMax.getmaximum(test.getStack().getProcessor(1));
+		
+		//double la = test.getStack().getProcessor(1).getPixelValue(0, 0);
+		//get the min of the first stack of the images
+		double min_im1 = MinMax.getminimum(reference.getStack().getProcessor(1));    //.getMin();
+		double min_im2 = MinMax.getminimum(test.getStack().getProcessor(1));// .getMin();
+	
+		if((max_im1 > 1.0 )||(max_im2 > 1.0)||(min_im1<0.0)||(min_im2<0.0)) {
+			return "For Hinge, values must be between 0.0 and 1.0" ;
+		}
 		return "Valid";
 	}
 }
+

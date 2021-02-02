@@ -10,18 +10,12 @@ import ij.process.ImageProcessor;
 
 public class SSIM extends AbstractLoss {
 
-	/*
-	 * This is a series unit test for the Bce function
-	 */
 	public static void main(String arg[]) {
 		ImagePlus ref = IJ.createImage("ref", 32, 200, 202, 32);
 		ImagePlus test = IJ.createImage("test", 32, 200, 202, 32);
 		ref.setRoi(new Roi(20, 30, 50, 50));
 		ref.getProcessor().fill();
 		
-		ArrayList<Double> result = new Bce().run(ref, test);
-		System.out.println("Series of unit test");
-		System.out.println("" + result);
 	}
 	
 	@Override
@@ -29,7 +23,7 @@ public class SSIM extends AbstractLoss {
 		return "SSIM";
 	}
 	@Override
-	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test) {
+	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
 		
 		int nxr = reference.getWidth();
 		int nyr = reference.getHeight();
@@ -39,7 +33,7 @@ public class SSIM extends AbstractLoss {
 		double c1,c2;
 		c1=(k1*255)*(k1*255);
 		c2=(k2*255)*(k2*255);
-		int L = 3;
+		int L = (int) setting.wd_ssim;
 		int pixwin=L*L;
 			
 		ArrayList<Double> res = new ArrayList<Double>(); 	
@@ -100,14 +94,18 @@ public class SSIM extends AbstractLoss {
 	}
 
 	@Override
-	public String check(ImagePlus reference, ImagePlus test) {
-		
-		if (reference == null)
-			return "null image";
-		if (test == null)
-			return "null image";
-		
-		return "";
+	public ArrayList<Double> compose(ArrayList<Double> loss1, double w_1, ArrayList<Double> loss2, double w_2) {
+		return null;
+	}
+	
+	@Override
+	public Boolean getSegmented() {
+		return false;
+	}
+
+	@Override
+	public String check(ImagePlus reference, ImagePlus test, Setting setting) {
+		return "Valid";
 	}
 }
 

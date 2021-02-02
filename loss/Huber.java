@@ -8,18 +8,20 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
-public class RMSE extends AbstractLoss {
+public class Huber extends AbstractLoss {
+
 
 	public static void main(String arg[]) {
 		ImagePlus ref = IJ.createImage("ref", 32, 200, 202, 32);
 		ImagePlus test = IJ.createImage("test", 32, 200, 202, 32);
 		ref.setRoi(new Roi(20, 30, 50, 50));
 		ref.getProcessor().fill();
+		
 	}
 	
 	@Override
 	public String getName() {
-		return "RMSE";
+		return "Huber";
 	}
 	@Override
 	public ArrayList<Double> compute(ImagePlus reference, ImagePlus test,Setting setting) {
@@ -32,6 +34,7 @@ public class RMSE extends AbstractLoss {
 	
 		int nzr = reference.getStack().getSize();
 		int nzt = test.getStack().getSize();
+		double delta = 1.0;
 		
 		for (int z=1; z<=Math.max(nzr, nzt); z++) {
 			int ir = Math.min(z, nzr);
@@ -39,7 +42,7 @@ public class RMSE extends AbstractLoss {
 			ImageProcessor ipt = test.getStack().getProcessor(it);
 			ImageProcessor ipr = reference.getStack().getProcessor(ir);
 			int n=0;
-			double s, g, mse=0.0, rmse;
+			double s, g, error=0.0, loss= 0.0;
 			for (int x = 0; x < nxr; x++) {
 				for (int y = 0; y < nyr; y++) {
 					
@@ -47,14 +50,17 @@ public class RMSE extends AbstractLoss {
 					g = ipt.getPixelValue(x, y);
 					if (!Double.isNaN(g))
 						if (!Double.isNaN(s)) {
-							mse += (g-s)*(g-s);
+							error = s-g;
+							if( Math.abs(error) > delta) {
+								loss+=0.5*Math.pow(delta, 2) + delta*(Math.abs(error) - delta);
+							}
+							else
+								loss+=0.5*Math.pow(error, 2);
 							n++;
 						}
 				}
 			}
-			mse=mse/n;
-			rmse=Math.sqrt(mse);
-			res.add(rmse);
+			res.add(loss);
 					
 		}
 		
@@ -62,18 +68,23 @@ public class RMSE extends AbstractLoss {
 		return res ;
 	}
 
+
 	@Override
 	public ArrayList<Double> compose(ArrayList<Double> loss1, double w_1, ArrayList<Double> loss2, double w_2) {
+		
 		return null;
 	}
 	
 	@Override
 	public Boolean getSegmented() {
+		
 		return false;
 	}
 
 	@Override
 	public String check(ImagePlus reference, ImagePlus test, Setting setting) {
+		
 		return "Valid";
 	}
 }
+
